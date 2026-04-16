@@ -9,10 +9,22 @@ final class Router
     /** @var Route[] */
     private array $routes = [];
 
+    private string $currentPrefix = '';
+
     public function __construct(
         private readonly ControllerFactory $factory,
         private readonly \Closure $notFoundHandler,
     ) {}
+
+    public function group(string $prefix, callable $callback): void
+    {
+        $previousPrefix = $this->currentPrefix;
+        $this->currentPrefix = $previousPrefix . $prefix;
+
+        $callback($this);
+
+        $this->currentPrefix = $previousPrefix;
+    }
 
     public function get(string $uri, string $controller, string $action): static
     {
@@ -41,7 +53,12 @@ final class Router
 
     public function addRoute(string $method, string $uri, string $controller, string $action): static
     {
-        $this->routes[] = new Route(strtoupper($method), $uri, $controller, $action);
+        $this->routes[] = new Route(
+            strtoupper($method),
+            $this->currentPrefix . $uri,
+            $controller,
+            $action,
+        );
 
         return $this;
     }
@@ -71,7 +88,8 @@ final class Router
 
     private function normaliseUri(string $uri): string
     {
-        $path = parse_url($uri, PHP_URL_PATH) ?? '/';
+        $path = parse_url($uri, PHP_URL_PATH);
+        $path = is_string($path) ? $path : '/';
         return rtrim($path, '/') ?: '/';
     }
 }
