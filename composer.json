@@ -1,0 +1,20 @@
+{
+    "name": "taleastromex/php-articles",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Davut",
+            "email": "sergeev.davutt@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "smarty/smarty": "^4.0"
+    }
+}
