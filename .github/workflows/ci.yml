@@ -31,4 +31,4 @@ jobs:
         run: find public -name "*.php" -exec php -l {} \;
 
       - name: PHPStan
-        run: vendor/bin/phpstan analyse --memory-limit=512M
+        run: vendor/bin/phpstan analyse --memory-limit=512M --configuration=phpstan.neon
