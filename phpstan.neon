@@ -2,8 +2,8 @@ parameters:
   level: 5
 
   paths:
-    # - src
-    # - core
+    - app
+    - core
     - public
 
   excludePaths:
