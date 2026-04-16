@@ -22,6 +22,7 @@ final class Route
         return (bool) preg_match($this->pattern, $uri);
     }
 
+    /** @return array<string, string> */
     public function extractParams(string $uri): array
     {
         preg_match($this->pattern, $uri, $matches);
