@@ -1,5 +1,6 @@
 {
     "name": "taleastromex/php-articles",
+    "description": "A simple articles app built with native PHP, MySQL as the database, and Smarty as the template engine.",
     "type": "project",
     "license": "MIT",
     "autoload": {
