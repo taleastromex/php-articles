@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Core\Routing;
 
+use Core\Container\Container;
+
 final class Router
 {
     /** @var Route[] */
@@ -12,7 +14,7 @@ final class Router
     private string $currentPrefix = '';
 
     public function __construct(
-        private readonly ControllerFactory $factory,
+        private readonly Container $container,
         private readonly \Closure $notFoundHandler,
     ) {}
 
@@ -77,7 +79,7 @@ final class Router
                 continue;
             }
 
-            $controller = $this->factory->make($route->controller);
+            $controller = $this->container->make($route->controller);
             $controller->{$route->action}(...$route->extractParams($uri));
 
             return;

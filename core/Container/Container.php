@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Core\Routing;
+namespace Core\Container;
 
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
 use RuntimeException;
 
-final class ControllerFactory
+final class Container
 {
     /** @var array<string, object> */
     private array $bindings = [];
@@ -22,7 +22,7 @@ final class ControllerFactory
     public function make(string $class): object
     {
         if (!class_exists($class)) {
-            throw new RuntimeException("ControllerFactory: class {$class} does not exist");
+            throw new RuntimeException("Container: class {$class} does not exist");
         }
 
         $constructor = (new ReflectionClass($class))->getConstructor();
@@ -49,6 +49,10 @@ final class ControllerFactory
             if (isset($this->bindings[$name])) {
                 return $this->bindings[$name];
             }
+
+            if (!$type->isBuiltin() && class_exists($name)) {
+                return $this->make($name);
+            }
         }
 
         if ($param->isOptional()) {
@@ -58,7 +62,7 @@ final class ControllerFactory
         $typeName = $type instanceof ReflectionNamedType ? $type->getName() : 'unknown';
 
         throw new RuntimeException(
-            "ControllerFactory: cannot resolve \${$param->getName()} ({$typeName}) for {$class}"
+            "Container: cannot resolve \${$param->getName()} ({$typeName}) for {$class}"
         );
     }
 }
