@@ -4,7 +4,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use App\Controllers\ErrorController;
 use Core\Http\JsonResponse;
-use Core\Routing\ControllerFactory;
+use Core\Container\Container;
 use Core\Routing\Router;
 use Core\View\SmartyFactory;
 use Core\View\SmartyView;
@@ -12,12 +12,12 @@ use Core\View\ViewInterface;
 
 $view = new SmartyView((new SmartyFactory())->make(dirname(__DIR__)));
 
-$factory = new ControllerFactory();
-$factory->bind(ViewInterface::class, $view);
-$factory->bind(JsonResponse::class, new JsonResponse());
+$container = new Container();
+$container->bind(ViewInterface::class, $view);
+$container->bind(JsonResponse::class, new JsonResponse());
 
 $router = new Router(
-    $factory,
+    $container,
     static fn() => (new ErrorController($view))->notFound(),
 );
 
