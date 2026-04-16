@@ -1,5 +1,6 @@
 {
     "name": "taleastromex/php-articles",
+    "description": "A simple articles app built with native PHP, MySQL as the database, and Smarty as the template engine.",
     "type": "project",
     "license": "MIT",
     "autoload": {
@@ -16,5 +17,8 @@
     "require": {
         "php": "^8.1",
         "smarty/smarty": "^4.0"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1"
     }
 }

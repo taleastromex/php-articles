@@ -1,0 +1,34 @@
+name: PHP CI
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.1
+          tools: composer
+          extensions: mbstring, pdo, pdo_mysql
+
+      - name: PHP version
+        run: php -v
+
+      - name: Validate composer.json
+        run: composer validate
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: PHP lint
+        run: find public -name "*.php" -exec php -l {} \;
+
+      - name: PHPStan
+        run: vendor/bin/phpstan analyse --memory-limit=512M --configuration=phpstan.neon
