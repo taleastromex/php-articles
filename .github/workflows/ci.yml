@@ -7,6 +7,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: articles_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,3 +46,10 @@ jobs:
 
       - name: PHPStan
         run: vendor/bin/phpstan analyse --memory-limit=512M --configuration=phpstan.neon
+
+      - name: Run migrations
+        run: |
+          for f in $(ls docker/mysql/init/*.sql | sort); do
+            echo "Running $f"
+            mysql -h 127.0.0.1 -P 3306 -u root -proot articles_test < "$f"
+          done
