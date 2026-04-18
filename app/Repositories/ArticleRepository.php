@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Entities\Article;
+use App\Entities\ArticlePreview;
 use App\Entities\Category;
 use Core\Database\AbstractRepository;
 
@@ -13,32 +14,53 @@ final class ArticleRepository extends AbstractRepository
     private const ALLOWED_SORTS = ['created_at', 'views'];
 
     /**
-     * @return Article[]
+     * Home page: latest N articles per category in a single query.
+     * Uses ROW_NUMBER() window function to pick top-N within each group.
+     *
+     * @return array<int, ArticlePreview[]>
      */
-    public function findLatestByCategory(int $categoryId, int $limit = 3): array
+    public function findLatestGroupedByCategory(int $limit = 3): array
     {
         $rows = $this->fetchAll(
-            'SELECT a.id, a.title, a.slug, a.description, a.content, a.image, a.views, a.created_at
-             FROM articles a
-             JOIN article_category ac ON ac.article_id = a.id
-             WHERE ac.category_id = :category_id
-             ORDER BY a.created_at DESC
-             LIMIT :limit',
-            ['category_id' => $categoryId, 'limit' => $limit],
+            'SELECT id, title, slug, description, image, views, created_at, category_id
+             FROM (
+                 SELECT
+                     a.id, a.title, a.slug, a.description,
+                     a.image, a.views, a.created_at,
+                     ac.category_id,
+                     ROW_NUMBER() OVER (
+                         PARTITION BY ac.category_id
+                         ORDER BY a.created_at DESC
+                     ) AS row_num
+                 FROM articles a
+                 JOIN article_category ac ON ac.article_id = a.id
+             ) ranked
+             WHERE row_num <= :limit
+             ORDER BY category_id, created_at DESC',
+            ['limit' => $limit],
         );
 
-        return array_map(fn(array $row) => $this->hydrate($row), $rows);
+        $ids = array_map(fn(array $r) => (int)$r['id'], $rows);
+        $catsByArticle = $this->fetchCategoriesForArticles($ids);
+
+        $grouped = [];
+        foreach ($rows as $row) {
+            $categoryId = (int)$row['category_id'];
+            $grouped[$categoryId][] = $this->hydratePreview($row, $catsByArticle[(int)$row['id']] ?? []);
+        }
+
+        return $grouped;
     }
 
     /**
-     * @return Article[]
+     * @return ArticlePreview[]
      */
     public function findByCategory(int $categoryId, int $limit, int $offset, string $sort = 'created_at'): array
     {
         $sort = in_array($sort, self::ALLOWED_SORTS, true) ? $sort : 'created_at';
 
         $rows = $this->fetchAll(
-            "SELECT a.id, a.title, a.slug, a.description, a.content, a.image, a.views, a.created_at
+            "SELECT a.id, a.title, a.slug, a.description, a.image, a.views, a.created_at
              FROM articles a
              JOIN article_category ac ON ac.article_id = a.id
              WHERE ac.category_id = :category_id
@@ -47,7 +69,13 @@ final class ArticleRepository extends AbstractRepository
             ['category_id' => $categoryId, 'limit' => $limit, 'offset' => $offset],
         );
 
-        return array_map(fn(array $row) => $this->hydrate($row), $rows);
+        $ids = array_map(fn(array $r) => (int)$r['id'], $rows);
+        $catsByArticle = $this->fetchCategoriesForArticles($ids);
+
+        return array_map(
+            fn(array $row) => $this->hydratePreview($row, $catsByArticle[(int)$row['id']] ?? []),
+            $rows,
+        );
     }
 
     public function countByCategory(int $categoryId): int
@@ -75,14 +103,14 @@ final class ArticleRepository extends AbstractRepository
             return null;
         }
 
-        $categories = $this->fetchCategories((int)$row['id']);
+        $categories = $this->fetchCategoriesForArticles([(int)$row['id']]);
 
-        return $this->hydrate($row, $categories);
+        return $this->hydrate($row, $categories[(int)$row['id']] ?? []);
     }
 
     /**
      * @param int[] $categoryIds
-     * @return Article[]
+     * @return ArticlePreview[]
      */
     public function findSimilar(int $excludeId, array $categoryIds, int $limit = 3): array
     {
@@ -93,7 +121,7 @@ final class ArticleRepository extends AbstractRepository
         $placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
 
         $rows = $this->fetchAll(
-            "SELECT DISTINCT a.id, a.title, a.slug, a.description, a.content, a.image, a.views, a.created_at
+            "SELECT DISTINCT a.id, a.title, a.slug, a.description, a.image, a.views, a.created_at
              FROM articles a
              JOIN article_category ac ON ac.article_id = a.id
              WHERE ac.category_id IN ({$placeholders})
@@ -103,14 +131,20 @@ final class ArticleRepository extends AbstractRepository
             [...$categoryIds, $excludeId, $limit],
         );
 
-        return array_map(fn(array $row) => $this->hydrate($row), $rows);
+        $ids = array_map(fn(array $r) => (int)$r['id'], $rows);
+        $catsByArticle = $this->fetchCategoriesForArticles($ids);
+
+        return array_map(
+            fn(array $row) => $this->hydratePreview($row, $catsByArticle[(int)$row['id']] ?? []),
+            $rows,
+        );
     }
 
     public function create(
-        string  $title,
-        string  $slug,
-        string  $description,
-        string  $content,
+        string $title,
+        string $slug,
+        string $description,
+        string $content,
         ?string $image = null,
     ): int
     {
@@ -149,27 +183,39 @@ final class ArticleRepository extends AbstractRepository
     }
 
     /**
-     * @return Category[]
+     * Bulk-fetch categories for multiple articles at once (avoids N+1).
+     *
+     * @param int[] $articleIds
+     * @return array<int, Category[]>
      */
-    private function fetchCategories(int $articleId): array
+    private function fetchCategoriesForArticles(array $articleIds): array
     {
+        if (empty($articleIds)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($articleIds), '?'));
+
         $rows = $this->fetchAll(
-            'SELECT c.id, c.name, c.slug, c.description
+            "SELECT ac.article_id, c.id, c.name, c.slug, c.description
              FROM categories c
              JOIN article_category ac ON ac.category_id = c.id
-             WHERE ac.article_id = :article_id',
-            ['article_id' => $articleId],
+             WHERE ac.article_id IN ({$placeholders})",
+            $articleIds,
         );
 
-        return array_map(
-            fn(array $row) => new Category(
+        $result = [];
+        foreach ($rows as $row) {
+            $articleId = (int)$row['article_id'];
+            $result[$articleId][] = new Category(
                 id: (int)$row['id'],
                 name: (string)$row['name'],
                 slug: (string)$row['slug'],
                 description: isset($row['description']) ? (string)$row['description'] : null,
-            ),
-            $rows,
-        );
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -184,6 +230,24 @@ final class ArticleRepository extends AbstractRepository
             slug: (string)$row['slug'],
             description: (string)$row['description'],
             content: (string)$row['content'],
+            image: isset($row['image']) ? (string)$row['image'] : null,
+            views: (int)$row['views'],
+            createdAt: (string)$row['created_at'],
+            categories: $categories,
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @param Category[] $categories
+     */
+    private function hydratePreview(array $row, array $categories = []): ArticlePreview
+    {
+        return new ArticlePreview(
+            id: (int)$row['id'],
+            title: (string)$row['title'],
+            slug: (string)$row['slug'],
+            description: (string)$row['description'],
             image: isset($row['image']) ? (string)$row['image'] : null,
             views: (int)$row['views'],
             createdAt: (string)$row['created_at'],
