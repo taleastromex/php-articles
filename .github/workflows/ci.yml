@@ -3,8 +3,37 @@ on:
   push:
     branches: [ "master" ]
   pull_request:
+
 jobs:
-  build:
+  lint:
+    name: Lint & Static Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.1
+          tools: composer
+          extensions: mbstring, pdo, pdo_mysql
+
+      - name: Validate composer.json
+        run: composer validate
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: PHP lint
+        run: find public app core -name "*.php" -exec php -l {} \;
+
+      - name: PHPStan
+        run: vendor/bin/phpstan analyse --memory-limit=512M --configuration=phpstan.neon
+
+  database:
+    name: Migrations & Seeders
     runs-on: ubuntu-latest
 
     services:
@@ -32,20 +61,8 @@ jobs:
           tools: composer
           extensions: mbstring, pdo, pdo_mysql
 
-      - name: PHP version
-        run: php -v
-
-      - name: Validate composer.json
-        run: composer validate
-
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
-
-      - name: PHP lint
-        run: find public -name "*.php" -exec php -l {} \;
-
-      - name: PHPStan
-        run: vendor/bin/phpstan analyse --memory-limit=512M --configuration=phpstan.neon
 
       - name: Run migrations
         run: |
@@ -53,3 +70,12 @@ jobs:
             echo "Running $f"
             mysql -h 127.0.0.1 -P 3306 -u root -proot articles_test < "$f"
           done
+
+      - name: Run seeders
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: articles_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+        run: php bin/seed.php
