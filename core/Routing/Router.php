@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Core\Routing;
 
 use Core\Container\Container;
+use Core\Http\Exceptions\NotFoundException;
 
 final class Router
 {
@@ -79,8 +80,12 @@ final class Router
                 continue;
             }
 
-            $controller = $this->container->make($route->controller);
-            $controller->{$route->action}(...$route->extractParams($uri));
+            try {
+                $controller = $this->container->make($route->controller);
+                $controller->{$route->action}(...$route->extractParams($uri));
+            } catch (NotFoundException) {
+                ($this->notFoundHandler)();
+            }
 
             return;
         }
