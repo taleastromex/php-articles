@@ -17,11 +17,12 @@ final class CategorySeeder
     public function run(): array
     {
         $data = [
-            ['name' => 'PHP', 'slug' => 'php', 'description' => 'Статьи о языке программирования PHP: синтаксис, паттерны, best practices.'],
-            ['name' => 'JavaScript', 'slug' => 'javascript', 'description' => 'Всё о JavaScript: от основ до современных фреймворков.'],
-            ['name' => 'Docker', 'slug' => 'docker', 'description' => 'Контейнеризация, docker-compose, деплой и оркестрация.'],
-            ['name' => 'Базы данных', 'slug' => 'databases', 'description' => 'MySQL, PostgreSQL, Redis — проектирование и оптимизация.'],
-            ['name' => 'Архитектура', 'slug' => 'architecture', 'description' => 'SOLID, паттерны проектирования, чистая архитектура.'],
+            ['name' => 'PHP', 'slug' => 'php', 'description' => 'Articles about PHP: syntax, design patterns, and best practices.'],
+            ['name' => 'JavaScript', 'slug' => 'javascript', 'description' => 'Everything about JavaScript: from the basics to modern frameworks.'],
+            ['name' => 'Docker', 'slug' => 'docker', 'description' => 'Containerisation, docker-compose, deployment and orchestration.'],
+            ['name' => 'Databases', 'slug' => 'databases', 'description' => 'MySQL, PostgreSQL, Redis — schema design and query optimisation.'],
+            ['name' => 'Architecture', 'slug' => 'architecture', 'description' => 'SOLID, design patterns, and clean architecture.'],
+            ['name' => 'Python', 'slug' => 'python', 'description' => 'Python fundamentals, data processing, scripting, and ecosystem tools.'],
         ];
 
         $created = [];

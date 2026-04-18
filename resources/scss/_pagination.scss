@@ -1,0 +1,53 @@
+@use 'variables' as *;
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-xs;
+    margin-top: $spacing-2xl;
+
+    &__item {
+        a,
+        span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 2.25rem;
+            height: 2.25rem;
+            padding: 0 $spacing-sm;
+            border: 1px solid $color-border;
+            border-radius: $border-radius-sm;
+            font-size: $font-size-sm;
+            text-decoration: none;
+            color: $color-text;
+            transition: background-color 0.15s ease, color 0.15s ease;
+
+            &:hover {
+                background-color: $color-primary;
+                color: $color-white;
+                border-color: $color-primary;
+            }
+        }
+
+        &--active span {
+            background-color: $color-primary;
+            color: $color-white;
+            border-color: $color-primary;
+            font-weight: 600;
+            cursor: default;
+        }
+
+        &--disabled span {
+            color: $color-text-muted;
+            cursor: default;
+            pointer-events: none;
+
+            &:hover {
+                background-color: transparent;
+                color: $color-text-muted;
+                border-color: $color-border;
+            }
+        }
+    }
+}

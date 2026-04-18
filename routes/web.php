@@ -11,3 +11,4 @@ use App\Controllers\HomeController;
 $router->get('/', HomeController::class, 'index');
 $router->get('/categories', CategoryController::class, 'index');
 $router->get('/articles', ArticleController::class, 'index');
+$router->get('/articles/{slug}', ArticleController::class, 'show');
