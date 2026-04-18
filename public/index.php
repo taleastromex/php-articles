@@ -21,6 +21,7 @@ $db = new Connection(new DatabaseConfig(
     password: (string) getenv('DB_PASSWORD'),
 ));
 
+// Для трех контроллеров конечно слегка оверхэд, но, почему бы и нет
 $container = new Container();
 $container->bind(ViewInterface::class, $view);
 $container->bind(Connection::class, $db);

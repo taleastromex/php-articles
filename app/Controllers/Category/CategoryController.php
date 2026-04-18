@@ -1,15 +1,50 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers\Category;
 
+use App\Repositories\ArticleRepository;
+use App\Repositories\CategoryRepository;
+use Core\Database\Paginator;
+use Core\Http\Exceptions\NotFoundException;
 use Core\View\ViewInterface;
 
 final class CategoryController
 {
-    public function __construct(private readonly ViewInterface $view) {}
+    public function __construct(
+        private readonly ViewInterface $view,
+        private readonly CategoryRepository $categoryRepository,
+        private readonly ArticleRepository $articleRepository,
+    ) {}
 
-    public function index(): void
+    public function show(string $slug): void
     {
-        $this->view->render('category/index.tpl');
+        $category = $this->categoryRepository->findBySlug($slug);
+
+        if (!$category) {
+            throw new NotFoundException("Category '{$slug}' not found");
+        }
+
+        $sort = $_GET['sort'] ?? 'created_at';
+        $paginator = Paginator::fromRequest(
+            total: $this->articleRepository->countByCategory($category->id),
+            perPage: 10,
+            page: (int)($_GET['page'] ?? 1),
+        );
+
+        $articles = $this->articleRepository->findByCategory(
+            categoryId: $category->id,
+            limit: $paginator->perPage,
+            offset: $paginator->offset,
+            sort: $sort,
+        );
+
+        $this->view->render('category/show.tpl', [
+            'category' => $category,
+            'articles' => $articles,
+            'paginator' => $paginator,
+            'sort' => $sort,
+        ]);
     }
 }

@@ -21,10 +21,7 @@ final class HomeController
         $categories = $this->categoryRepository->findAll();
         $groupedArticles = $this->articleRepository->findLatestGroupedByCategory();
 
-        $categoriesById = [];
-        foreach ($categories as $category) {
-            $categoriesById[$category->id] = $category;
-        }
+        $categoriesById = array_column($categories, null, 'id');
 
         $this->view->render('home/index.tpl', ['categoriesById' => $categoriesById, 'groupedArticles' => $groupedArticles]);
     }
