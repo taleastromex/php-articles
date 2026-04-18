@@ -106,11 +106,39 @@ final class ArticleRepository extends AbstractRepository
         return array_map(fn(array $row) => $this->hydrate($row), $rows);
     }
 
+    public function create(
+        string  $title,
+        string  $slug,
+        string  $description,
+        string  $content,
+        ?string $image = null,
+    ): int
+    {
+        $this->execute(
+            'INSERT INTO articles (title, slug, description, content, image)
+             VALUES (:title, :slug, :description, :content, :image)',
+            [
+                'title' => $title,
+                'slug' => $slug,
+                'description' => $description,
+                'content' => $content,
+                'image' => $image,
+            ],
+        );
+
+        return $this->lastInsertId();
+    }
+
+    public function attachCategory(int $articleId, int $categoryId): void
+    {
+        $this->execute(
+            'INSERT IGNORE INTO article_category (article_id, category_id) VALUES (:article_id, :category_id)',
+            ['article_id' => $articleId, 'category_id' => $categoryId],
+        );
+    }
+
     /**
      * TODO: take into account pseudo-unique article views by cookie
-     *
-     * @param int $id
-     * @return void
      */
     public function incrementViews(int $id): void
     {
