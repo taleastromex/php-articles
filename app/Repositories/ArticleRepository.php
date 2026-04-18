@@ -12,6 +12,7 @@ use Core\Database\AbstractRepository;
 final class ArticleRepository extends AbstractRepository
 {
     private const ALLOWED_SORTS = ['created_at', 'views'];
+    private const ALLOWED_ORDERS = ['asc', 'desc'];
 
     /**
      * Home page: latest N articles per category in a single query.
@@ -55,16 +56,23 @@ final class ArticleRepository extends AbstractRepository
     /**
      * @return ArticlePreview[]
      */
-    public function findByCategory(int $categoryId, int $limit, int $offset, string $sort = 'created_at'): array
+    public function findByCategory(
+        int $categoryId,
+        int $limit,
+        int $offset,
+        string $sort = 'created_at',
+        string $order = 'desc',
+    ): array
     {
         $sort = in_array($sort, self::ALLOWED_SORTS, true) ? $sort : 'created_at';
+        $order = in_array($order, self::ALLOWED_ORDERS, true) ? $order : 'desc';
 
         $rows = $this->fetchAll(
             "SELECT a.id, a.title, a.slug, a.description, a.image, a.views, a.created_at
              FROM articles a
              JOIN article_category ac ON ac.article_id = a.id
              WHERE ac.category_id = :category_id
-             ORDER BY a.{$sort} DESC
+             ORDER BY a.{$sort} {$order}
              LIMIT :limit OFFSET :offset",
             ['category_id' => $categoryId, 'limit' => $limit, 'offset' => $offset],
         );

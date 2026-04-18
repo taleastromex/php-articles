@@ -26,11 +26,13 @@ final class CategoryController
             throw new NotFoundException("Category '{$slug}' not found");
         }
 
-        $sort = $_GET['sort'] ?? 'created_at';
+        $sort  = $_GET['sort']  ?? 'created_at';
+        $order = $_GET['order'] ?? 'desc';
+
         $paginator = Paginator::fromRequest(
             total: $this->articleRepository->countByCategory($category->id),
             perPage: 10,
-            page: (int)($_GET['page'] ?? 1),
+            page: (int) ($_GET['page'] ?? 1),
         );
 
         $articles = $this->articleRepository->findByCategory(
@@ -38,6 +40,7 @@ final class CategoryController
             limit: $paginator->perPage,
             offset: $paginator->offset,
             sort: $sort,
+            order: $order,
         );
 
         $this->view->render('category/show.tpl', [
@@ -45,6 +48,7 @@ final class CategoryController
             'articles' => $articles,
             'paginator' => $paginator,
             'sort' => $sort,
+            'order' => $order,
         ]);
     }
 }
