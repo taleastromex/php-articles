@@ -5,7 +5,6 @@ require __DIR__ . '/../vendor/autoload.php';
 use App\Controllers\ErrorController;
 use Core\Database\Connection;
 use Core\Database\DatabaseConfig;
-use Core\Http\JsonResponse;
 use Core\Container\Container;
 use Core\Routing\Router;
 use Core\View\SmartyFactory;
@@ -24,7 +23,6 @@ $db = new Connection(new DatabaseConfig(
 
 $container = new Container();
 $container->bind(ViewInterface::class, $view);
-$container->bind(JsonResponse::class, new JsonResponse());
 $container->bind(Connection::class, $db);
 
 $router = new Router(
