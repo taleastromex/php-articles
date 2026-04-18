@@ -33,12 +33,24 @@
     <link rel="apple-touch-icon"                      href="/apple-touch-icon.png">
 
     {* ── Styles ──────────────────────────────────────────────────────── *}
-    {block name='styles'}{/block}
+    {block name='styles'}
+        <link rel="stylesheet" href="/css/app.css">
+    {/block}
 </head>
 <body>
-    {include file='./header.tpl'}
+    {include file='partials/header.tpl'}
 
-    {block name='content'}{/block}
+    <main class="main">
+        <div class="container">
+            {block name='content'}{/block}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            &copy; {$smarty.now|date_format:'%Y'} Blogy
+        </div>
+    </footer>
 
     {* ── Scripts ─────────────────────────────────────────────────────── *}
     {block name='scripts'}{/block}
