@@ -17,13 +17,6 @@ final class CategoryRepository extends AbstractRepository
         return array_map(fn(array $row) => $this->hydrate($row), $rows);
     }
 
-    public function findById(int $id): ?Category
-    {
-        $row = $this->fetchOne('SELECT id, name, slug, description FROM categories WHERE id = :id LIMIT 1', ['id' => $id]);
-
-        return $row !== null ? $this->hydrate($row) : null;
-    }
-
     public function findBySlug(string $slug): ?Category
     {
         $row = $this->fetchOne('SELECT id, name, slug, description FROM categories WHERE slug = :slug LIMIT 1', ['slug' => $slug]);

@@ -171,9 +171,6 @@ final class ArticleRepository extends AbstractRepository
         );
     }
 
-    /**
-     * TODO: take into account pseudo-unique article views by cookie
-     */
     public function incrementViews(int $id): void
     {
         $this->execute(
@@ -206,12 +203,12 @@ final class ArticleRepository extends AbstractRepository
 
         $result = [];
         foreach ($rows as $row) {
-            $articleId = (int)$row['article_id'];
+            $articleId = (int) $row['article_id'];
             $result[$articleId][] = new Category(
-                id: (int)$row['id'],
-                name: (string)$row['name'],
-                slug: (string)$row['slug'],
-                description: isset($row['description']) ? (string)$row['description'] : null,
+                id: (int) $row['id'],
+                name: (string) $row['name'],
+                slug: (string) $row['slug'],
+                description: isset($row['description']) ? (string) $row['description'] : null,
             );
         }
 
@@ -225,14 +222,14 @@ final class ArticleRepository extends AbstractRepository
     private function hydrate(array $row, array $categories = []): Article
     {
         return new Article(
-            id: (int)$row['id'],
-            title: (string)$row['title'],
-            slug: (string)$row['slug'],
-            description: (string)$row['description'],
-            content: (string)$row['content'],
-            image: isset($row['image']) ? (string)$row['image'] : null,
-            views: (int)$row['views'],
-            createdAt: (string)$row['created_at'],
+            id: (int) $row['id'],
+            title: (string) $row['title'],
+            slug: (string) $row['slug'],
+            description: (string) $row['description'],
+            content: (string) $row['content'],
+            image: isset($row['image']) ? (string) $row['image'] : null,
+            views: (int) $row['views'],
+            createdAt: (string) $row['created_at'],
             categories: $categories,
         );
     }
