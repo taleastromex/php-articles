@@ -13,12 +13,18 @@
                 {/if}
             </div>
 
-            <div>
-                <a href="?sort=created_at" class="btn {if $sort === 'created_at'}btn--primary{else}btn--outline{/if}">
-                    By date
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="?sort=created_at&order=desc" class="btn {if $sort === 'created_at' && $order === 'desc'}btn--primary{else}btn--outline{/if}">
+                    Newest
                 </a>
-                <a href="?sort=views" class="btn {if $sort === 'views'}btn--primary{else}btn--outline{/if}">
-                    By views
+                <a href="?sort=created_at&order=asc" class="btn {if $sort === 'created_at' && $order === 'asc'}btn--primary{else}btn--outline{/if}">
+                    Oldest
+                </a>
+                <a href="?sort=views&order=desc" class="btn {if $sort === 'views' && $order === 'desc'}btn--primary{else}btn--outline{/if}">
+                    Most viewed
+                </a>
+                <a href="?sort=views&order=asc" class="btn {if $sort === 'views' && $order === 'asc'}btn--primary{else}btn--outline{/if}">
+                    Least viewed
                 </a>
             </div>
         </div>
@@ -33,7 +39,7 @@
             <nav class="pagination">
                 <div class="pagination__item {if !$paginator->hasPrev()}pagination__item--disabled{/if}">
                     {if $paginator->hasPrev()}
-                        <a href="?page={$paginator->currentPage - 1}&sort={$sort}">&larr;</a>
+                        <a href="?page={$paginator->currentPage - 1}&sort={$sort}&order={$order}">&larr;</a>
                     {else}
                         <span>&larr;</span>
                     {/if}
@@ -44,14 +50,14 @@
                         {if $page === $paginator->currentPage}
                             <span>{$page}</span>
                         {else}
-                            <a href="?page={$page}&sort={$sort}">{$page}</a>
+                            <a href="?page={$page}&sort={$sort}&order={$order}">{$page}</a>
                         {/if}
                     </div>
                 {/for}
 
                 <div class="pagination__item {if !$paginator->hasNext()}pagination__item--disabled{/if}">
                     {if $paginator->hasNext()}
-                        <a href="?page={$paginator->currentPage + 1}&sort={$sort}">&rarr;</a>
+                        <a href="?page={$paginator->currentPage + 1}&sort={$sort}&order={$order}">&rarr;</a>
                     {else}
                         <span>&rarr;</span>
                     {/if}
